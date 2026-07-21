@@ -6,8 +6,8 @@
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
   "exports": {
-    "import": "./dist/index.mjs",
-    "types": "./dist/index.d.mts"
+    "types": "./dist/index.d.mts",
+    "import": "./dist/index.mjs"
   },
   "repository": {
     "type": "git",
@@ -21,7 +21,6 @@
     "dist"
   ],
   "scripts": {
-    "start": "node ./start.ts",
     "lint": "eslint src/**/*.ts",
     "build": "tsdown",
     "prepublishOnly": "yarn build",
