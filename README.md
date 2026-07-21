@@ -5,7 +5,7 @@ Minimal, dependency-free ZIP reader/writer for Node.js, built entirely on `node:
 Designed for use cases where you need to **produce or consume ZIP archives without ever buffering the whole content in memory** — e.g. streaming a database export straight into an HTTP response, or reading an uploaded ZIP file entry-by-entry without extracting it to disk first.
 Why
 
-Most ZIP libraries for Node.js ([adm-zip](https://github.com/cthackers/adm-zip), [jszip](https://github.com/Stuk/jszip), [archiver](https://github.com/archiverjs/node-archiver)...) buffer each entry — and often the whole archive — in memory before writing or after reading. That works fine for small files, but doesn't scale: if an entry is a multi-gigabyte export, you'll run out of memory before you ever touch the disk or the network.
+Most ZIP libraries for Node.js ([adm-zip](https://github.com/cthackers/adm-zip), [jszip](https://github.com/Stuk/jszip), [archiver](https://github.com/archiverjs/node-archiver) etc) buffer each entry — and often the whole archive — in memory before writing or after reading. That works fine for small files, but doesn't scale: if an entry is a multi-gigabyte export, you'll run out of memory before you ever touch the disk or the network.
 
 This package instead:
 - **Writes** ZIP archives incrementally, compressing each entry with `zlib.createDeflateRaw()` as data flows in from a source stream, using the ZIP data descriptor mechanism to write CRC32/size **after** the compressed data (since they're only known once the stream is fully consumed).
@@ -44,7 +44,7 @@ yarn add node-zip-stream
 ```ts
 import { createWriteStream } from 'node:fs'
 import { Readable } from 'node:stream'
-import { createZipStream, type ZipEntry } from 'node-zip-stream'
+import { createZipStream, type ZipEntry } from 'node-zip-stream/write'
 
 const entries: ZipEntry[] = [
   {
@@ -72,7 +72,7 @@ Any `Readable` works as an entry source, so you can plug in a database cursor, a
 
 ```ts
 import { Readable } from 'node:stream'
-import { createZipStream, type ZipEntry } from 'node-zip-stream'
+import { createZipStream, type ZipEntry } from 'node-zip-stream/write'
 
 async function* generateRows() {
   for (let i = 0; i < 1_000_000; i++) {
@@ -95,7 +95,7 @@ for await (const chunk of createZipStream(entries)) {
 import { Readable } from 'node:stream'
 import type { Context } from 'hono'
 import { stream as honoStream } from 'hono/streaming'
-import { createZipStream, type ZipEntry } from 'node-zip-stream'
+import { createZipStream, type ZipEntry } from 'node-zip-stream/write'
 
 export default async function download(c: Context) {
   const entries: ZipEntry[] = [
@@ -117,7 +117,7 @@ export default async function download(c: Context) {
 `readZipEntries` parses the central directory of an in-memory `Buffer` and returns metadata for each entry (name, offsets, sizes, compression method) without decompressing anything. `openZipEntryStream` then opens a decompression stream for a single entry on demand.
 
 ```ts
-import { readZipEntries, openZipEntryStream } from 'node-zip-stream'
+import { readZipEntries, openZipEntryStream } from 'node-zip-stream/read'
 
 const buffer = await fs.promises.readFile('archive.zip')
 
@@ -139,7 +139,7 @@ for (const entry of entries) {
 Since each entry only reads its own slice of the source buffer, entries can safely be processed concurrently:
 
 ```ts
-import { readZipEntries, openZipEntryStream } from 'node-zip-stream'
+import { readZipEntries, openZipEntryStream } from 'node-zip-stream/read'
 
 const buffer = await getUploadedZipBuffer()
 const entries = readZipEntries(buffer)
@@ -153,6 +153,7 @@ await Promise.all(
 ```
 
 ### API
+`streaming-zip/write`
 `createZipStream(entries: ZipEntry[]): AsyncGenerator<Buffer>`
 
 Produces a valid ZIP file as a sequence of `Buffer` chunks. Entries are processed sequentially, in the order provided; each entry's source stream is fully consumed (and compressed via DEFLATE) before moving to the next.
@@ -164,6 +165,7 @@ interface ZipEntry {
 }
 ```
 
+`streaming-zip/read`
 `readZipEntries(buffer: Buffer): ZipReadEntry[]`
 
 Parses the ZIP central directory and returns entry metadata. Does not read or decompress entry content.

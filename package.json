@@ -3,11 +3,15 @@
   "version": "1.0.0",
   "license": "MIT",
   "type": "module",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.mts",
   "exports": {
-    "types": "./dist/index.d.mts",
-    "import": "./dist/index.mjs"
+    "./read": {
+      "types": "./dist/read.d.mts",
+      "import": "./dist/read.mjs"
+    },
+    "./write": {
+      "types": "./dist/write.d.mts",
+      "import": "./dist/write.mjs"
+    }
   },
   "repository": {
     "type": "git",
