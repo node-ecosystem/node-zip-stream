@@ -22,7 +22,7 @@
   ],
   "scripts": {
     "start": "node ./start.ts",
-    "lint": "eslint src/**/*.{ts,tsx} *.ts",
+    "lint": "eslint src/**/*.ts",
     "build": "tsdown",
     "prepublishOnly": "yarn build",
     "od": "yarn outdated"
