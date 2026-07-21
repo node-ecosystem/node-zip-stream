@@ -1,0 +1,104 @@
+name: Publish Release
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  publish_package:
+    if: startsWith(github.event.head_commit.message, 'release:')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    environment: release
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          registry-url: 'https://registry.npmjs.org'
+      - name: Install dependencies & build
+        run: yarn install && yarn build
+      - name: Create NPM release
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Create GitHub release
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { owner, repo } = context.repo
+
+            const { data: releases } = await github.rest.repos.listReleases({
+              owner,
+              repo
+            })
+
+            const defaultBranch = context.ref.replace('refs/heads/', '')
+            const version = require('./package.json').version
+            const versionTag = `v${version}`
+
+            let releaseNotes = ''
+            if (releases.length === 0) {
+              releaseNotes = 'First release!'
+            } else {
+              // Get range of commits using the API (from the previous release to the current HEAD)
+              const { data: comparison } = await github.rest.repos.compareCommits({
+                owner,
+                repo,
+                base: releases[0].tag_name,
+                head: context.sha
+              })
+
+              const features = []
+              const fixes = []
+              const breaking = []
+
+              const getEntry = (firstLine, sha) => {
+                const cleanedMessage = firstLine.replace(/^[a-zA-Z]+(?:\([^)]+\))?!?:\s*/, '')
+                const shortSha = sha.substring(0, 7)
+                return `- ${cleanedMessage} (${shortSha})`
+              }
+
+              // Split commits by standard Conventional Commits
+              for (const { commit, sha } of comparison.commits) {
+                const firstLine = commit.message.split('\n')[0].trim()
+                const cleanedMessage = firstLine.replace(/^[a-zA-Z]+(?:\([^)]+\))?!?:\s*/, '')
+                const shortSha = sha.substring(0, 7)
+                const entry = `- ${cleanedMessage} (${shortSha})`
+
+                // Breaking Changes "!" before the colon, e.g. "feat!:"
+                if (/^[a-zA-Z]+(?:\([^)]+\))?!:/.test(firstLine)) {
+                  breaking.push(entry)
+                }
+                // Features with prefix "feat:" or "feat(scope):"
+                else if (/^feat(?:\([^)]+\))?:/.test(firstLine)) {
+                  features.push(entry)
+                } 
+                // Bug Fixes with prefix "fix:" or "fix(scope):"
+                else if (/^fix(?:\([^)]+\))?:/.test(firstLine)) {
+                  fixes.push(entry)
+                }
+              }
+
+              if (breaking.length > 0) releaseNotes += '### Breaking Changes\n' + breaking.join('\n') + '\n\n'
+              if (features.length > 0) releaseNotes += '### Features\n' + features.join('\n') + '\n\n'
+              if (fixes.length > 0) releaseNotes += '### Bug Fixes\n' + fixes.join('\n') + '\n\n'
+            }
+
+            await github.rest.repos.createRelease({
+              owner,
+              repo,
+              tag_name: versionTag,
+              target_commitish: defaultBranch,
+              name: versionTag,
+              body: releaseNotes.trim()
+            })
+
+            console.log(`Release ${versionTag} created`)

@@ -1,0 +1,24 @@
+{
+  "editor.formatOnSave": true,
+  "editor.insertSpaces": true,
+  "editor.minimap.enabled": false,
+  "editor.renderWhitespace": "all",
+  "editor.tabSize": 2,
+  "eslint.nodePath": ".yarn/sdks",
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "git.mergeEditor": false,
+  "js/ts.tsdk.path": ".yarn/sdks/typescript/lib",
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true,
+  "search.exclude": {
+    "**/.github": true,
+    "**/.pnp.*": true,
+    "**/.vite": true,
+    "**/.vscode": true,
+    "**/.yarn": true,
+    "dist": true
+  },
+  "terminal.integrated.defaultProfile.windows": "Command Prompt",
+  "window.commandCenter": false,
+  "workbench.startupEditor": "none"
+}
