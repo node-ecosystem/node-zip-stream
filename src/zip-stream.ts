@@ -117,7 +117,7 @@ const buildEndOfCentralDirectory = (
  * Limitation: no ZIP64 support → not suitable for single entries/archives
  * over ~4GB (would require ZIP64 extra fields in the headers).
  */
-export async function* createZipStream(entries: ZipEntry[]): AsyncGenerator<Buffer> {
+export async function* createZipStream(entries: ZipEntry[]): AsyncGenerator<Uint8Array> {
   const centralDirectoryRecords: Buffer[] = []
   const { time: dosTime, date: dosDate } = toDosDateTime(new Date())
 
