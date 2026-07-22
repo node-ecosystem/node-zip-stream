@@ -14,7 +14,7 @@ This package instead:
 Zero runtime dependencies — everything is built on Node.js core modules (`node:zlib`, `node:stream`).
 
 ### Requirements
-- Node.js >= 20.15.0 or >= 22.2.0 (uses `zlib.crc32`)
+- Node.js >= 20.15.0 or >= 22.2.0 (`node-zip-stream` uses `crc32` of `node:zlib`)
 
 ### Installation
 
@@ -93,21 +93,22 @@ for await (const chunk of createZipStream(entries)) {
 
 ```ts
 import { Readable } from 'node:stream'
+import { ReadableStream } from 'node:stream/web'
 import type { Context } from 'hono'
-import { stream as honoStream } from 'hono/streaming'
 import { createZipStream, type ZipEntry } from 'node-zip-stream/write'
 
 export default async function download(c: Context) {
   const entries: ZipEntry[] = [
     { name: 'export.json', stream: Readable.from(getDataAsJsonChunks()) }
   ]
-
-  c.header('Content-Disposition', 'attachment; filename="export.zip"')
-  c.header('Content-Type', 'application/zip')
-
-  return honoStream(c, async (s) => {
-    for await (const chunk of createZipStream(entries)) {
-      await s.write(chunk)
+  const webStream = ReadableStream.from(createZipStream(entries))
+  const zipName = 'export'
+  return Response(webStream, {
+    status: 200,
+    headers: {
+      'Content-Disposition': `attachment; filename="${zipName}"`,
+      'Content-Type': 'application/zip',
+      Filename: zipName
     }
   })
 }
