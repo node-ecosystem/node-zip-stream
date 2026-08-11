@@ -31,13 +31,13 @@
     "od": "yarn outdated"
   },
   "devDependencies": {
-    "@types/node": "^26.1.1",
-    "@yarnpkg/sdks": "^3.3.0",
-    "eslint": "^10.7.0",
+    "@types/node": "^26.2.0",
+    "@yarnpkg/sdks": "^3.3.1",
+    "eslint": "^10.8.1",
     "eslint-plugin-unicorn": "^72.0.0",
-    "tsdown": "^0.22.13",
+    "tsdown": "^0.22.14",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.65.0"
+    "typescript-eslint": "^8.66.0"
   },
   "engines": {
     "node": "^20.15.0 || >=22.2.0"
